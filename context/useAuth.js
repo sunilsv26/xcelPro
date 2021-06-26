@@ -4,7 +4,7 @@ import firebase from "firebase";
 import { useHistory } from 'react-router-dom';
 
 // Provider hook that creates an auth object and handles it's state
-const authContext = createContext({ user: {} ,allUsers:[],loading:true});
+const authContext = createContext({ user: {} ,allUsers:[],loading:true,error:''});
 const { Provider } = authContext;
 export function AuthProvider(props) {
   const auth = useAuthProvider();
@@ -16,7 +16,8 @@ export const useAuth = () => {
 const useAuthProvider = () => {
   const [user, setUser] = useState(null);
   const [allUsers, setAllUsers] = useState([]);
-  const[loading,setLoading]=useState(true)
+  const[loading,setLoading]=useState(true);
+  const[error,setError]=useState(null)
   const history = useHistory();
 
   let databaseRef = firebase.database().ref("users/");
@@ -25,6 +26,7 @@ const useAuthProvider = () => {
     let uid = firebase.database().ref().child("users").push().key;
     let data = {
       firstName: firstName,
+      displayName:firstName,
       lastName: lastName,
       email: email,
       image: "https://picsum.photos/200",
@@ -41,12 +43,7 @@ const useAuthProvider = () => {
         getUsers()
         setUser(user); 
       }
-      
-      if (!user) {
-        history.push('/signin');
-      }
     });
-    console.log('inside-44');
   }, []);
 
   const getUsers = () => {
@@ -73,8 +70,10 @@ const useAuthProvider = () => {
           lastName,
           email,
         });
+        firebase.auth().currentUser.updateProfile({displayName:firstName})
       })
       .catch((error) => {
+        setError(error)
         return { error };
       });
   };
@@ -87,6 +86,7 @@ const useAuthProvider = () => {
         return response.user;
       })
       .catch((error) => {
+        setError(error)
         return { error };
       });
   };
@@ -99,6 +99,7 @@ const useAuthProvider = () => {
     signIn,
     allUsers,
     signOut,
-    loading
+    loading,
+    error
   };
 };

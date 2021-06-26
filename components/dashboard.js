@@ -1,9 +1,10 @@
+/* eslint-disable @next/next/no-img-element */
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
 import { Redirect, NavLink } from "react-router-dom";
 import { Container, Row, Col, Button } from "reactstrap";
 import Usercard from "../components/UI/userCard";
-import useProtectedRoute, { allUsers } from "../context/useProtectedRoute";
+import useProtectedRoute from "../context/useProtectedRoute";
 
 const icons = [
   "https://image.flaticon.com/icons/png/512/1828/1828673.png",
@@ -13,22 +14,31 @@ const icons = [
 const Dashboard = () => {
   useProtectedRoute();
   const [allUsers, setAllUsers] = useState([]);
-  const[isLoading,setIsLoadnig]=useState(true)
+  const [isLoading, setIsLoadnig] = useState(true);
   const auth = useAuth();
   useEffect(() => {
     console.log(auth.loading);
     if (!auth.loading) {
-      const data =[...auth.allUsers];
+      const data = [...auth.allUsers];
       console.log(data);
       setTimeout(() => {
         setAllUsers([...data]);
-        setIsLoadnig(false)
+        setIsLoadnig(false);
       }, 2000);
-     
     }
   }, [auth.loading]);
 
-
+  useEffect(() => {
+    setTimeout(() => {
+      console.log(auth.user);
+    }, 2000);
+ 
+    let online = window.navigator.onLine;
+    if (!online) {
+      auth.signOut();
+      return <Redirect to="/signin" />;
+    }
+  }, []);
 
   return (
     <Container fluid className="p-0 h-100 dashboard">
@@ -48,16 +58,20 @@ const Dashboard = () => {
               <div className="dashboard">DASHBOARD</div>
             </Col>
             <Col xs="6" className="user-img-logout">
+            <div style={{margin:'0px 5px'}}>
+                Welcome !{auth && auth.user && auth.user.displayName}
+              </div>
               <Button className="logout-btn" onClick={() => auth.signOut()}>
                 Logout
               </Button>
+              
               <div className="user-img">
                 <img src="https://picsum.photos/200" alt="User Image" />
               </div>
             </Col>
           </Row>
           <Row className="users">
-            {isLoading ? <h3>Loading...</h3>:null}
+            {isLoading ? <h3>Loading...</h3> : null}
             {!auth.loading &&
               auth.allUsers.map((user) => {
                 const { firstName, lastName, image, email, key } = user;

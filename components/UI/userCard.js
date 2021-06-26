@@ -5,8 +5,12 @@ const userCard = (props) => {
   return (
     <div className="card">
       <div className="card-icons">
-        <div className="icon">...</div>
-        <div className="icon">*</div>
+        <div className="icon">
+          <img src="/icons/vertical-dots.png" alt="icon" />
+        </div>
+        <div className="icon">
+          <img src="/icons/star.png" alt="icon" />
+        </div>
       </div>
       <div className="user-image">
         <img src={props.image} alt="User photo" />

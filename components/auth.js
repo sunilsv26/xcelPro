@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import React, { useEffect, useState } from "react";
-import { NavLink ,Redirect} from "react-router-dom";
+import { NavLink, Redirect } from "react-router-dom";
 import {
   Row,
   Col,
@@ -13,11 +13,60 @@ import {
 } from "reactstrap";
 import { useAuth } from "../context/useAuth";
 
-
 const Auth = (props) => {
-  let [form, setForm] = useState({ email: "", password: "" });
-
+  let [form, setForm] = useState({
+    email: "",
+    password: "",
+    firstName: "",
+    lastName: "",
+  });
+  let [isEmailValid, setIsEmailValid] = useState(false);
+  let [isPasswordValid, setIsPasswordValid] = useState(false);
+  let [emailError, setEmailError] = useState("");
+  let [passError, setPassError] = useState(
+    "*Min 6 chars length(Max 16 chars),should have one number and one special character"
+  );
+  let [authError, setAuthError] = useState("");
   const auth = useAuth();
+
+  useEffect(() => {
+    if(auth && auth.error){
+      setAuthError(auth.error.message);
+    }
+   
+    setTimeout(() => {
+      setAuthError("")
+    }, 3000);
+  }, [auth.error]);
+
+  const handleEmailValidation = () => {
+    let email = form.email;
+    let emailTest =
+      /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    console.log(emailTest.test(email));
+    if (emailTest.test(email)) {
+      setIsEmailValid(true);
+    } else {
+      setIsEmailValid(false);
+    }
+  };
+
+  const handlePasswordValidation = () => {
+    let pass = form.password;
+    if (pass.length < 6 || pass.length > 16) {
+      setIsPasswordValid(false);
+    } else {
+      setIsPasswordValid(true);
+    }
+    let passTest = /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/;
+    if (passTest.test(pass)) {
+      setIsPasswordValid(true);
+    } else {
+      setIsPasswordValid(false);
+    }
+  };
+
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (props.isSignUp) {
@@ -29,12 +78,41 @@ const Auth = (props) => {
 
   const handleInputChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    if (e.target.name === "email") {
+      handleEmailValidation();
+    }
+    if (e.target.name === "password") {
+      handlePasswordValidation();
+    }
   };
 
-  if(auth.user){
-    return <Redirect to="/" />
+  if (auth.user) {
+    return <Redirect to="/" />;
   }
- 
+
+  
+
+  const handleEmail = () => {
+    console.log(isEmailValid);
+    if (isEmailValid === false) {
+      setEmailError("Enter Valid Email Address");
+    }
+    setInterval(() => {
+      setEmailError("");
+    }, 3000);
+  };
+
+  const handlePass = () => {
+    if (isPasswordValid === false) {
+      setPassError("Enter Valid Password");
+    }
+    setTimeout(() => {
+      setPassError(
+        "*Min 6 chars length (Max 16 chars),should have one number and one special character"
+      );
+    }, 3000);
+  };
+
   return (
     <Container className="auth-page m-0 p-0 h-100" fluid>
       <Row className="m-0 h-100">
@@ -54,19 +132,25 @@ const Auth = (props) => {
               <Col>
                 <div className="auth-subheader">
                   {props.suHeader}
-                  {props.isSignUp ? (
+                  {/* {props.isSignUp ? (
                     <NavLink to="/signin">Login</NavLink>
                   ) : (
                     <NavLink to="/signup">Sign Up</NavLink>
-                  )}
+                  )} */}
                 </div>
               </Col>
             </Row>
             <Row className="mb-3">
               <Col className="text-center">
-                <NavLink to="/">
-                  <Button className="google-btn">{`${props.header} via Google`}</Button>
-                </NavLink>
+                {props.isSignUp ? (
+                  <NavLink to="/signin">
+                    <Button className="google-btn">Sign In</Button>
+                  </NavLink>
+                ) : (
+                  <NavLink to="/signup">
+                    <Button className="google-btn">Sign Up</Button>
+                  </NavLink>
+                )}
               </Col>
             </Row>
             <Form onSubmit={handleSubmit} className="mb-3">
@@ -106,8 +190,10 @@ const Auth = (props) => {
                     id="email"
                     value={form["email"]}
                     onChange={handleInputChange}
+                    onBlur={handleEmail}
                   />
                 </Col>
+                {<div style={{ fontSize: "12px" }}>{emailError}</div>}
               </FormGroup>
               <FormGroup row className="mb-3">
                 <Col>
@@ -118,18 +204,26 @@ const Auth = (props) => {
                     id="password"
                     value={form["password"]}
                     onChange={handleInputChange}
+                    onBlur={handlePass}
                   />
                 </Col>
+                {<div style={{ fontSize: "12px" }}>{passError}</div>}
               </FormGroup>
               <Row className="mb-3">
                 <Col>
-                  <Button className="auth-btn">
+                  <Button
+                    className="auth-btn"
+                    disabled={
+                      isEmailValid === false || isPasswordValid === false
+                    }
+                  >
                     {`${props.header} our community`}
                   </Button>
                 </Col>
               </Row>
               <Row>
                 <Col>
+                  <p className="align-center" style={{fontSize:'12px',color:'red'}}>{authError}</p>
                   <p className="align-center">
                     By joining you agree to the Terms and Privacy Policy
                   </p>
